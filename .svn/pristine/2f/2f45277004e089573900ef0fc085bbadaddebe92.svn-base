@@ -1,0 +1,111 @@
+<template>
+<div class="page-index" id="home" data-log="首页">
+  <div class="top-header">
+    <div class="index-header">
+        <div class="left logo">
+          <img :src="logo.imgUrl">
+        </div>
+        <div class="search_bar">
+          <input type="text" @focus="handleFocus" v-model="inputText" placeholder="搜索商品名称" />
+        </div>
+        <button class='right'>搜索</button>
+    </div>
+  </div>
+
+  <div class="page-swipe">
+    <mt-swipe :auto="3000">
+      <mt-swipe-item class="banner" v-for="(i,index) of proImgList" :key="index">
+        <router-link :to = "{name: 'detail', params: { proId: i.imgId }}">
+          <img :src="i.filePath">
+        </router-link>
+      </mt-swipe-item>
+    </mt-swipe>
+  </div>
+  <div class="section">
+    <ul class="itmes-list flex3" 
+      v-infinite-scroll="loadMore"
+      infinite-scroll-disabled="loading"
+      infinite-scroll-distance="4">
+        <li class="itmes" v-for="(item,index) in proList" :key = "index">
+          <router-link :to="{name: 'detail', params: { proId: item.proId }}">
+            <img :src="item.filePath" alt="" v-if = "item.filePath">
+            <img src="../assets/noimage.png" alt="暂无图片" v-if = " !item.filePath ">
+            <div class="proInfo">
+              <p class="proName">{{item.proName}}</p>
+              <p class="proBrief">{{ item.descr ? item.descr : "暂无描述" | postFilter }}</p>
+              <p class="proPrice">￥{{ item.proPrice | moneyFormat }}元</p>
+            </div>
+          </router-link>
+        </li>
+    </ul>
+  </div>
+  <div class="section" v-if = "proList.length > 0">
+    <div class="divider_line" style="width:100%;height:0.08rem; border-bottom: 0.08rem solid #0383ca"></div>
+  </div>
+</div>
+</template>
+<script>
+import { InfiniteScroll,Indicator } from 'mint-ui'
+import Vue from 'vue'
+Vue.use(InfiniteScroll)
+export default {
+  data () {
+    return {
+      proList:[],
+      proImgList:[],
+      index:0,
+      noImgPath:'../assets/noimage.png',
+      oldList:[],
+      newList:[],
+      logo:{}
+    }
+  },
+  created(){
+    this.queryImgList()
+    this.queryLogo()
+    this.queryProList(0,4)
+  },
+  methods:{
+    queryLogo(){
+      let params = {
+        imgType:'3'
+      }
+      this._ajaxSubmit('proimg.do','queryImg',params,(data)=>{
+          this.logo = data.imgList[0]
+      })
+    },
+    queryImgList(){
+      let params = {
+        imgType:'0'
+      }
+      this._ajaxSubmit('proimg.do','queryImg',params,(data)=>{
+          this.proImgList = data.imgList
+      })
+    },
+    queryProList(pageNo,pageSize){
+      let params = {
+        proParam:'1',
+        proStatus:'0',
+        pageNo:pageNo,
+        pageSize:pageSize
+      }
+      this._ajaxSubmit('prodetails.do','queryProdetails',params,(data)=>{
+          this.newList = data.proList
+          this.oldList = this.proList
+          this.proList = this.oldList.concat(this.newList)
+      })
+    },
+    loadMore() {
+      this.loading = true
+      this.index++
+      this.queryProList(this.index,4)
+      setTimeout(() => {
+        this.loading = false;
+      }, 1500);
+    },
+    handleFocus() {
+      this.$router.push({path: '/search'})
+    }
+  }
+}
+</script>

@@ -1,9 +1,9 @@
 {
-  "name": "douban-movie",
+  "name": "ztwlf",
   "version": "1.0.0",
-  "description": "A Vue.js project",
-  "author": "zxl",
-  "private": true,
+  "description": "A Vue.js project base on vue vue-resource mint-ui and so on!",
+  "author": "lwy",
+  "private": false,
   "scripts": {
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
@@ -12,6 +12,7 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs"
   },
   "dependencies": {
+    "js-base64": "^2.1.9",
     "mint-ui": "^2.0.5",
     "vue": "^2.0.1",
     "vue-router": "^2.0.3"
@@ -85,5 +86,5 @@
   "directories": {
     "test": "test"
   },
-  "license": "ISC"
+  "license": "MIT"
 }

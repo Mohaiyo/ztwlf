@@ -1,0 +1,121 @@
+<template>
+    <div class="page-category">
+        <div class="page-category-wrap" ref="sc">
+            <mt-header title="商品分类">
+              <p @click="goBack()" slot="left">
+                <mt-button icon="back">返回</mt-button>
+              </p>
+              <!-- <mt-button icon="more" slot="right"></mt-button> -->
+            </mt-header>
+            <div class="list-wrap" ref='list'>
+                <div class="js-list-item" id='new'>
+                    <div class="f-list" v-for = "(item,index) of proclassList2" :key ="index">
+                        <div class="session">
+                            <div class="category_title">
+                                <span @click = "level3ListHandler(item.pclassId,index)">{{ item.pclassName }}</span>
+                            </div>
+                        </div>
+                        <div class="session" v-show = "showClassId == index">
+                            <div class="category_group">
+                                <div class="box">
+                                    <div class="product" v-for = "(item,index) of proclassList3">
+                                        <router-link :to="{ name: 'categoryList', params: { pclassId: item.pclassId }}" class="exposure">
+                                            <div class="name">{{ item.pclassName }}</div>
+                                        </router-link>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="list-navbar" style="top: 40px; bottom: 54px;" ref='navbar'>
+            <ul>
+                <li :class="{active : ind === index}" v-for="(item,index) of proclassList" @click="categoryHandler(index,item.pclassId)" :key="index"><span>{{ item.pclassName }}</span></li>
+            </ul>
+        </div>
+    </div>
+</template>
+<script>
+import Vue from 'vue'
+import { Header,Indicator } from 'mint-ui'
+Vue.component(Header.name, Header)
+export default{
+  data () {
+    return {
+        msg: 'Hello Vue!',
+        proclassList: [],
+        proclassList2: [],
+        proclassList3: [],
+        scroll: '',
+        isActive:false,
+        ind: 0,
+        showClassId:''
+    }
+  },
+  created(){
+    this.queryProclassList();
+  },
+  mounted() {
+    var dom = this.$refs.sc;
+    dom.addEventListener('scroll', this.navHandler);
+    window.addEventListener('touchmove', this.navHandler);
+  },
+  methods:{
+    queryProclassList () {
+        let params = { 
+            pclassLevel:'1'
+         }
+        this._ajaxSubmit('proclass.do','queryProclass',params,(data)=>{
+            this.proclassList = data.pclassList
+            this.queryProclassList2(data.pclassList[0].pclassId);
+        })
+    },
+    queryProclassList2 (pclassId) {
+        let params = { 
+            pclassLevel:'2',
+            upClass:pclassId
+         }
+        this._ajaxSubmit('proclass.do','queryProclass',params,(data)=>{
+            this.proclassList2 = data.pclassList
+        })
+    },
+    queryProclassList3 (pclassId) {
+        let params = { 
+            pclassLevel:'3',
+            upClass:pclassId
+         }
+        this._ajaxSubmit('proclass.do','queryProclass',params,(data)=>{
+            this.proclassList3 = data.pclassList
+        })
+    },
+    navHandler() {
+        if (this.$refs.sc.scrollTop <=40) {
+            this.$refs.navbar.style.top = (40 - this.$refs.sc.scrollTop)+'px'
+        }else{
+            this.$refs.navbar.style.top = '0px'
+            }
+    },
+    categoryHandler(index,pclassId){
+        this.proclassList3 = []
+        this.ind = index
+        this.queryProclassList2(pclassId)
+    },
+    level3ListHandler(pclassId,index){
+        this.proclassList3 = []
+        this.queryProclassList3(pclassId)
+        this.showClassId = index
+        
+    },
+    goBack(){
+        this.$router.go('-1')
+    }
+  }
+}
+</script>
+<style type="text/css" scope>
+    .js-list-item:nth-last-child(1){
+        padding-bottom: 1.5rem;
+    }
+</style>

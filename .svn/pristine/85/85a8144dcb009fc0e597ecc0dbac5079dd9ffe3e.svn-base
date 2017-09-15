@@ -1,0 +1,53 @@
+/*
+* @Author: zengxianlin
+* @Date:   2016-11-29 09:53:53
+* @Last Modified by:   877529974@qq.com
+* @Last Modified time: 2016-11-29 09:59:27
+*/
+import Vue from 'vue'
+import App from './App.vue'
+import VueRouter from "vue-router"
+import router from './component/router'
+import VueResource from 'vue-resource'
+import MintUI from 'mint-ui'
+import { Indicator } from 'mint-ui';
+import 'mint-ui/lib/style.css'
+
+import AllDepend from './assets/allDepend.js'
+
+Vue.use(VueResource)
+Vue.use(VueRouter);
+Vue.use(MintUI)
+
+Vue.http.options.emulateJSON = true; 
+//开启debug模式   
+Vue.config.debug = true;
+//resource 拦截器 请求加载loading
+Vue.http.interceptors.push(function (request, next) {
+        // 调用loading，此处的 this 为发起请求的 component
+        Indicator.open({
+        	text:'加载中...',
+        	spinnerType: 'triple-bounce'
+        });
+        next(function (response) {
+            Indicator.close();
+		    return response
+        })
+    }) 
+
+// 是否登录，路由判断跳转  暂时不需要判断
+// router.beforeEach((to, from, next) => {
+//     if(to.path != '/login' && localStorage.getItem('userNo') === null ){// localStorage没有set的时候
+//         next('/login')
+//     }else{
+//         next()
+//     }
+// })
+
+// 现在我们可以启动应用了！
+// 路由器会创建一个 App 实例，并且挂载到选择符 #app 匹配的元素上。
+new Vue({
+  router,
+  render: h => h(App)
+}).$mount('#app')
+

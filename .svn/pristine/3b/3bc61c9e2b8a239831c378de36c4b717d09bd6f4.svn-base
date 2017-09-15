@@ -1,0 +1,188 @@
+<template>
+	<div class='page-wrap'>
+		<div class="product-detail">
+		    <div class="product-detail-wrap">
+		        <mt-header title="商品详情">
+		          <p slot="left" @click="goBack()">
+		            <mt-button icon="back">返回</mt-button>
+		          </p>
+		          <!-- <mt-button icon="more" slot="right"></mt-button> -->
+		        </mt-header>
+		    </div>
+		</div>
+		<div class="product-nav">
+			<ul>
+				<li :class="{active:ind === index}" v-for="(item,index) of titleList" :key='index' @click = "moduleHandler(index)">{{ item }}</li>
+			</ul>
+		</div>
+		<div class="pro-introduction" v-show='showF'>
+			<div class="page-swipe">
+			  <mt-swipe :auto="3000">
+			    <mt-swipe-item class="banner" v-for="i of  proDetailImgList"><img :src="i.filePath"></mt-swipe-item>
+			  </mt-swipe>
+			</div>
+			<div class="sale">
+				<div class="sale-wrap">
+					<p><b>产品名称：</b><span>{{ proMesList.proName }}</span></p>
+					<p><b>产品简介：</b><span>{{ proMesList.descr ? proMesList.descr : "暂无描述"}}</span></p>
+					<div>
+						<p><b>产品价格：</b><span>{{ proMesList.proPrice | moneyFormat }}元</span></p>
+						<a :href="proMesList.payUrl">购买</a>
+					</div>
+				</div>
+			</div>
+			<div class="recommend section">
+			  <h4>相关推荐</h4>
+			  <ul class="itmes-list flex3" v-show= "proRecomdList.length > 0">
+			      <li class="itmes" v-for="(i,index) of proRecomdList" :key="index">
+			      	<router-link :to="{name: 'detail', params:{ proId: i.rproId }}">
+			        	<img :src="i.filePath" alt="" v-if = "i.filePath">
+			        	<img src="../assets/noimage.png" alt="暂无图片" v-if = " !i.filePath ">
+				        <div class="proInfo">
+				          <p class="proName">{{ i.proName }}</p>
+				          <p class="proBrief">{{i.descr ? i.descr :"暂无描述" | postFilter}}</p>
+				          <p class="proPrice">￥{{ i.proPrice | moneyFormat}}元</p>
+				        </div>
+			        </router-link>
+			      </li>
+			  </ul>
+			  <div v-show ="proRecomdList.length == 0" class="noRecomd">
+			  	<p>暂无产品推荐</p>
+			  	<img src="../assets/noPro.png">
+			  </div>
+			</div>
+			 <div class="section" v-if=" proRecomdList.length > 0">
+	    		<div class="divider_line" style="width:100%;height:0.08rem; border-bottom: 0.08rem solid #0383ca"></div>
+	  		</div>
+		</div>
+		<div class="pro-camera" v-show='showT'>
+			<ul v-if="photoImgList.length > 0">
+				<li v-for="(i,index) in photoImgList" :key="index">
+					<img :src="i.filePath">
+				</li>
+			</ul>
+			<div v-if="photoImgList.length == 0" class="noRecomd">
+				<p>暂无摄影作品</p>
+				<img src="../assets/noimage.png">
+			</div>
+		</div>
+		<div class="pro-declaration" v-show="showS">
+			<p>{{proMesList.proDclm}}</p>
+		</div>
+	</div>
+</template>
+<script type="text/javascript">
+	export default {
+	  data () {
+	    return {
+	      list:[],
+	      titleList: [],
+	      showT:false,
+	      showS:false,
+	      showF:true,
+	      ind:0,
+	      proDetailImgList:[],
+	      photoImgList:[],
+	      proMesList:{},
+	      proRecomdList:[]
+	    }
+	  },
+	  created(){
+	    this.get()
+	    this.queryDetailImgList()
+	    this.queryProDetail()
+	    this.queryRecomdList()
+	  },
+	  watch:{
+	  	$route () {
+	  	  this.proDetailImgList = []
+	  	  this.proMesList = []
+	  	  this.proRecomdList = []
+	  	  this.get()
+	  	  this.queryDetailImgList()
+	  	  this.queryProDetail()
+	  	  this.queryRecomdList()
+	  	}
+	  },
+	  methods:{
+	  	queryDetailImgList () {
+	  		let params = {
+	  			proId:this.$route.params.proId,
+	  			imgType: '1',
+	  			status:'0'
+	  		}
+	  		this._ajaxSubmit('proimg.do','queryImg',params,(data)=>{
+          		this.proDetailImgList = data.imgList
+      		})
+	  	},
+	  	queryProDetail(){
+	  		let params = {
+	  			proId:this.$route.params.proId,
+	  			proStatus:'0'
+	  		}
+	  		this._ajaxSubmit('prodetails.do','queryProdetails',params,(data)=>{
+          		this.proMesList = data.proList[0]
+      		})	  		
+	  	},
+	  	queryPhotoImgList () {
+	  		let params = {
+	  			imgType: '2',
+	  			proId:this.$route.params.proId,
+	  			status:'0'
+	  		}
+	  		this._ajaxSubmit('proimg.do','queryImg',params,(data)=>{
+          		this.photoImgList = data.imgList
+      		})
+	  	},
+	  	queryRecomdList(){
+	  		let params = {
+	  			proId:this.$route.params.proId
+	  		}
+	  		this._ajaxSubmit('prorecomd.do','queryRecomd',params,(data)=>{
+          		this.proRecomdList = data.proList1
+      		})	  		
+	  	},	  	
+	    get(){
+	    	this.titleList = ['产品概述','摄影作品','负责声明']
+	    },
+	    loadMore() {
+	      this.loading = true
+	      setTimeout(() => {
+	        let last = this.list[this.list.length - 1];
+	        for (let i = 1; i <= 10; i++) {
+	          this.list.push(last + i)
+	        }
+	        this.loading = false
+	      }, 2500);
+	    },
+	    moduleHandler(index){
+	    	this.ind = index
+	    	if (index === 1) {
+	    		this.showT = true
+	    		this.showS = false
+	    		this.showF = false
+	    		if( this.photoImgList.length == 0){
+	    			this.queryPhotoImgList()
+	    		}
+
+	    	}else if(index === 2){
+	    		this.showS = true
+	    		this.showT = false
+	    		this.showF = false
+	    	}else{
+	    		this.showF = true
+	    		this.showS = false
+	    		this.showT = false
+	    	}
+	    },
+	    goBack(){
+	    	this.$router.go("-1")
+	    	this.ind = 0
+	    	this.showF = true
+	    	this.showS = false
+	    	this.showT = false
+	    }
+	  }
+
+	}
+</script>

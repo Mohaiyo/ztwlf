@@ -1,0 +1,89 @@
+<template>
+<div class="page-index" id="home" data-log="首页">
+  <div class="top-header">
+    <div class="index-header">
+        <div class="left back" @click='backHandler'>
+          <img src="../assets/back.svg">
+        </div>
+        <div class="search_bar">
+          <input type="text" v-model="inputText" placeholder="搜索商品名称" />
+        </div>
+        <button class='right' @click='searchHandler'>搜索</button>
+    </div>
+  </div>
+  <div class="search-section">
+    <ul class="itmes-list flex3" 
+      v-infinite-scroll="loadMore"
+      infinite-scroll-disabled="loading"
+      infinite-scroll-distance="10">
+        <li class="itmes" v-for = "(i,index) of searchList" :key = "index">
+          <router-link :to="{name: 'detail', params: { proId: i.proId }}">
+            <img :src="i.filePath" alt="" v-if = "i.filePath">
+            <img src="../assets/noimage.png" alt="暂无图片" v-if = " !i.filePath ">
+            <div class="proInfo">
+              <p class="proName">{{i.proName}}</p>
+              <p class="proBrief">{{i.descr ? i.descr : "暂无描述" | postFilter}}</p>
+              <p class="proPrice">{{i.proPrice}}</p>
+            </div>
+          </router-link>
+        </li>
+    </ul>
+    <div v-if="searchList.length > 0">
+      <div class="divider_line" style="width:100%;height:0.08rem; border-bottom: 0.08rem solid #0383ca"></div>
+    </div>
+  </div>
+
+</div>
+</template>
+<script>
+import { InfiniteScroll,Indicator,MessageBox } from 'mint-ui'
+import Vue from 'vue'
+Vue.use(InfiniteScroll)
+export default {
+  data () {
+    return {
+      list:[],
+      inputText:'',
+      searchList:[]
+    }
+  },
+  created(){
+  },
+  methods:{
+    loadMore() {
+      this.loading = true;
+      setTimeout(() => {
+        let last = this.list[this.list.length - 1];
+        for (let i = 1; i <= 10; i++) {
+          this.list.push(last + i);
+        }
+        this.loading = false;
+      }, 2500);
+    },
+    searchHandler() {
+      var params = {proName: this.inputText,proStatus:'0'};
+      this._ajaxSubmit('prodetails.do','queryProdetails',params,(data) =>{
+        if (data.proList.length == 0) {
+          MessageBox('提示', '对不起，暂无该产品！');
+        }
+        this.searchList = data.proList
+      });
+    },
+    backHandler(){
+      this.$router.push({path:'/home'})
+    }
+  }
+}
+</script>
+<style type="text/css" scope>
+  .search-section{
+    padding-top:2rem;
+  }
+  .back img {
+      width: 20px;
+      height: 30px;
+      line-height: 40px;
+      display: inline-block;
+      margin: .3rem auto;
+  }
+</style>
